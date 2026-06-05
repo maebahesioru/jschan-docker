@@ -4,19 +4,25 @@ RUN apt-get update -y && apt-get install -y ffmpeg imagemagick graphicsmagick &&
 
 WORKDIR /opt
 
+# Copy package files first for better layer caching
 COPY package.json package-lock.json ./
 RUN npm install
 
 RUN npm install -g pm2 gulp
 
+# Copy source code
 COPY . .
-COPY ./docker/jschan/secrets.js ./configs/secrets.js
 
-# Skip gulp generate-favicon since it seems to require DB connection
-# Instead, just set up the env
+# Use our custom secrets.js with env var support
+COPY secrets.js ./configs/secrets.js
+
 ENV MONGO_USERNAME=jschan
 ENV MONGO_PASSWORD=changeme
 ENV REDIS_PASSWORD=changeme
+ENV MONGO_HOST=mongodb
+ENV REDIS_HOST=redis
 
-# Generate favicon at runtime (in CMD)
+# Expose port 7000
+EXPOSE 7000
+
 CMD ["/bin/sh", "-c", "npx gulp generate-favicon && npx gulp && pm2-runtime start ecosystem.config.js"]
