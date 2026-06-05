@@ -5,14 +5,15 @@ RUN apt-get update -y && apt-get install -y \
     build-essential python3 \
     && rm -rf /var/lib/apt/lists/*
 
+# Clone JSChan to a temp directory, then move to /opt
+RUN git clone --depth 1 https://github.com/fatchan/jschan.git /tmp/jschan-src \
+    && cp -a /tmp/jschan-src/. /opt/ \
+    && rm -rf /tmp/jschan-src
+
 WORKDIR /opt
 
-# Clone JSChan from GitHub
-RUN git clone --depth 1 https://github.com/fatchan/jschan.git /opt
-
-# Install dependencies with longer timeout
-RUN npm install --prefer-offline --no-audit --no-fund 2>&1 || \
-    npm install --prefer-offline --no-audit --no-fund 2>&1
+# Install dependencies
+RUN npm install --prefer-offline --no-audit --no-fund
 
 RUN npm install -g pm2 gulp
 
