@@ -17,8 +17,36 @@ RUN npm install --prefer-offline --no-audit --no-fund
 
 RUN npm install -g pm2 gulp
 
-# Use our custom secrets.js with env var support  
-COPY secrets.js ./configs/secrets.js
+# Generate secrets.js with env var support (no COPY needed - Coolify build context is Dockerfile-only)
+RUN mkdir -p /opt/configs && cat > /opt/configs/secrets.js << 'SECRETS_EOF'
+module.exports = {
+	dbURL: `mongodb://${process.env.MONGO_USERNAME || 'jschan'}:${process.env.MONGO_PASSWORD || 'changeme'}@${process.env.MONGO_HOST || 'mongodb'}:27017`,
+	dbName: 'jschan',
+	redis: {
+		host: process.env.REDIS_HOST || 'redis',
+		port: '6379',
+		password: process.env.REDIS_PASSWORD || 'changeme',
+	},
+	port: 7000,
+	cookieSecret: process.env.COOKIE_SECRET || 'changeme',
+	tripcodeSecret: process.env.TRIPCODE_SECRET || 'changeme',
+	ipHashSecret: process.env.IP_HASH_SECRET || 'changeme',
+	postPasswordSecret: process.env.POST_PASSWORD_SECRET || 'changeme',
+	google: {
+		siteKey: process.env.GOOGLE_SITEKEY || 'changeme',
+		secretKey: process.env.GOOGLE_SECRETKEY || 'changeme',
+	},
+	hcaptcha: {
+		siteKey: process.env.HCAPTCHA_SITEKEY || '10000000-ffff-ffff-ffff-000000000001',
+		secretKey: process.env.HCAPTCHA_SECRETKEY || '0x0000000000000000000000000000000000000000',
+	},
+	yandex: {
+		siteKey: process.env.YANDEX_CAPTCHA_SITEKEY || 'changeme',
+		secretKey: process.env.YANDEX_CAPTCHA_SECRETKEY || 'changeme',
+	},
+	debugLogs: true,
+};
+SECRETS_EOF
 
 ENV MONGO_USERNAME=jschan
 ENV MONGO_PASSWORD=changeme
